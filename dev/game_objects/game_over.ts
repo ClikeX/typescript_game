@@ -1,9 +1,9 @@
 class GameOver extends GameObject {
-  public x: number;
-  public y: number;
-  public width: number;
-  public height: number;
-  public div: HTMLElement;
+  public x!: number;
+  public y!: number;
+  public width!: number;
+  public height!: number;
+  public div!: HTMLElement;
   public update(): void { }
 
   constructor() {
