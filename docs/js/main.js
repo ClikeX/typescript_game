@@ -63,7 +63,7 @@ var GameObject = (function () {
     GameObject.prototype.outOfBounds = function () {
         var h = window.innerHeight;
         var w = window.innerWidth;
-        return (this.x <= 0 || this.x >= w) || (this.x <= 0 || this.x >= w);
+        return (this.x <= 0 || this.x >= w) || (this.y <= 0 || this.y >= h);
     };
     GameObject.prototype.hasCollision = function (obj) {
         return (this.x < obj.x + obj.width &&
