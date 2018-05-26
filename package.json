@@ -1,0 +1,15 @@
+{
+  "name": "eindopdracht_applying",
+  "version": "1.0.0",
+  "description": "De eindopdracht voor Applying Design Patterns va",
+  "main": "app.js",
+  "scripts": {
+    "start": "node ./app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "connect": "^3.6.2",
+    "serve-static": "^1.12.3"
+  }
+}
