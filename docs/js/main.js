@@ -59,7 +59,6 @@ var GameObject = (function () {
     };
     GameObject.prototype.remove = function () {
         this.div.remove();
-        self = undefined;
     };
     GameObject.prototype.outOfBounds = function () {
         var h = window.innerHeight;
@@ -110,34 +109,6 @@ var Game = (function () {
 window.addEventListener("load", function () {
     var game = Game.getInstance();
 });
-var GameOver = (function (_super) {
-    __extends(GameOver, _super);
-    function GameOver() {
-        var _this = _super.call(this, window.innerWidth / 2 - 50, window.innerHeight / 2 - 25, "gameover") || this;
-        _this.div.innerHTML = "GAME OVER";
-        return _this;
-    }
-    GameOver.prototype.update = function () { };
-    return GameOver;
-}(GameObject));
-var MoveBehaviour = (function () {
-    function MoveBehaviour(context) {
-        this.context = context;
-    }
-    return MoveBehaviour;
-}());
-var MoveableObject = (function (_super) {
-    __extends(MoveableObject, _super);
-    function MoveableObject(x, y) {
-        var _this = _super.call(this, x, y, 'movable_object') || this;
-        _this.setMoveBehaviour(_this.moveBehaviour);
-        return _this;
-    }
-    MoveableObject.prototype.setMoveBehaviour = function (behaviour) {
-        this.moveBehaviour = behaviour;
-    };
-    return MoveableObject;
-}(GameObject));
 var UI = (function () {
     function UI(game) {
         this.life = 100;
@@ -175,4 +146,35 @@ var Util = (function () {
     };
     return Util;
 }());
+var GameOver = (function (_super) {
+    __extends(GameOver, _super);
+    function GameOver() {
+        var _this = _super.call(this, window.innerWidth / 2 - 50, window.innerHeight / 2 - 25, "gameover") || this;
+        _this.div.innerHTML = "GAME OVER";
+        return _this;
+    }
+    GameOver.prototype.update = function () { };
+    return GameOver;
+}(GameObject));
+var MoveBehaviour = (function () {
+    function MoveBehaviour(context) {
+        this.context = context;
+    }
+    return MoveBehaviour;
+}());
+var MoveableObject = (function (_super) {
+    __extends(MoveableObject, _super);
+    function MoveableObject(x, y) {
+        return _super.call(this, x, y, 'movable_object') || this;
+    }
+    Object.defineProperty(MoveableObject.prototype, "moveBehaviour", {
+        get: function () { return this._moveBehaviour; },
+        set: function (behaviour) { this._moveBehaviour = behaviour; },
+        enumerable: true,
+        configurable: true
+    });
+    MoveableObject.prototype.move = function () {
+    };
+    return MoveableObject;
+}(GameObject));
 //# sourceMappingURL=main.js.map

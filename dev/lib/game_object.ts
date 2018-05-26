@@ -54,7 +54,6 @@ abstract class GameObject {
 
   public remove(): void {
     this.div.remove();
-    self = undefined;
   }
 
   /**
@@ -65,7 +64,7 @@ abstract class GameObject {
   public outOfBounds(): boolean {
     let h = window.innerHeight;
     let w = window.innerWidth
-    return (this.x <= 0 || this.x >= w) || (this.x <= 0 || this.x >= w)
+    return (this.x <= 0 || this.x >= w) || (this.y <= 0 || this.y >= h)
   }
 
   public hasCollision(obj: GameObject): boolean {
