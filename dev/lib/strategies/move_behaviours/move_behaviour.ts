@@ -5,6 +5,6 @@ abstract class MoveBehaviour {
     this.context = context;
   }
 
-  public abstract move();
-  public abstract onKeyyDown();
+  public abstract move(): void;
+  public abstract onKeyyDown(): void;
 }

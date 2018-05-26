@@ -1,5 +1,5 @@
 class Game {
-    private static instance: Game
+    private static instance: Game;
     public static container = document.getElementById("container");
 
     public static getInstance() {
