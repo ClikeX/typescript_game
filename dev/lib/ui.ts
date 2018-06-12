@@ -4,7 +4,7 @@ class UI {
   private coindiv: HTMLElement;
   private lifediv: HTMLElement;
 
-  constructor(game: Game) {
+  constructor() {
     this.coindiv = <HTMLElement>document.getElementsByTagName("counter")[0];
     this.coindiv.innerHTML = "100";
 
