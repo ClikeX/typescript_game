@@ -12,10 +12,16 @@ class Game {
 
     private constructor() {
         requestAnimationFrame(() => this.gameLoop());
+        this._player_ship = new Spaceship();
     }
 
     private gameLoop() {
+        this._player_ship.update();
         requestAnimationFrame(() => this.gameLoop());
+
+        if (this._player_ship.x == -150) {
+            this.gameOver();
+        }
     }
 
     private gameOver(): void {
