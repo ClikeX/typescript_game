@@ -9,6 +9,35 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var Game = (function () {
+    function Game() {
+        var _this = this;
+        requestAnimationFrame(function () { return _this.gameLoop(); });
+        this._player_ship = new Spaceship();
+    }
+    Game.getInstance = function () {
+        if (!this.instance) {
+            this.instance = new Game();
+        }
+        return this.instance;
+    };
+    Game.prototype.gameLoop = function () {
+        var _this = this;
+        this._player_ship.update();
+        requestAnimationFrame(function () { return _this.gameLoop(); });
+        if (this._player_ship.x == -150) {
+            this.gameOver();
+        }
+    };
+    Game.prototype.gameOver = function () {
+        new GameOver();
+    };
+    Game.container = document.getElementById("container");
+    return Game;
+}());
+window.addEventListener("load", function () {
+    Game.getInstance();
+});
 var GameObject = (function () {
     function GameObject(x, y, tag) {
         this._x = 0;
@@ -17,9 +46,9 @@ var GameObject = (function () {
         this._height = 0;
         this._x = x;
         this._y = y;
-        var parent = document.getElementsByTagName("game")[0];
+        this._parent = document.getElementsByTagName("container")[0];
         this._div = document.createElement(tag);
-        parent.appendChild(this._div);
+        this._parent.appendChild(this._div);
         this._width = this._div.clientWidth;
         this._height = this._div.clientHeight;
         this.draw();
@@ -61,9 +90,13 @@ var GameObject = (function () {
         this.div.remove();
     };
     GameObject.prototype.outOfBounds = function () {
-        var h = window.innerHeight;
-        var w = window.innerWidth;
+        var h = parent.innerHeight;
+        var w = parent.innerWidth;
         return (this.x <= 0 || this.x >= w) || (this.y <= 0 || this.y >= h);
+    };
+    GameObject.prototype.keepFromOutOfBounds = function () {
+        this.x = Util.clamp(this.x, 0, (this._parent.offsetWidth - this._div.offsetWidth));
+        this.y = Util.clamp(this.y, 0, (this._parent.offsetHeight - this._div.offsetHeight));
     };
     GameObject.prototype.hasCollision = function (obj) {
         return (this.x < obj.x + obj.width &&
@@ -73,44 +106,53 @@ var GameObject = (function () {
     };
     return GameObject;
 }());
-var Car = (function (_super) {
-    __extends(Car, _super);
-    function Car() {
-        var _this = _super.call(this, 0, 0, 'Car') || this;
-        console.log("car created");
+var MoveBehaviour = (function () {
+    function MoveBehaviour(context) {
+        this._ySpeed = 0;
+        this._xSpeed = 0;
+        this.context = context;
+    }
+    return MoveBehaviour;
+}());
+var MoveableObject = (function (_super) {
+    __extends(MoveableObject, _super);
+    function MoveableObject(x, y, tag) {
+        return _super.call(this, x, y, tag) || this;
+    }
+    Object.defineProperty(MoveableObject.prototype, "moveBehaviour", {
+        get: function () { return this._moveBehaviour; },
+        set: function (behaviour) { this._moveBehaviour = behaviour; },
+        enumerable: true,
+        configurable: true
+    });
+    MoveableObject.prototype.move = function () {
+    };
+    return MoveableObject;
+}(GameObject));
+var Spaceship = (function (_super) {
+    __extends(Spaceship, _super);
+    function Spaceship() {
+        var _this = _super.call(this, 50, 50, 'Spaceship') || this;
+        console.log("Spaceship created");
+        _this.moveBehaviour = new PlayertMoveBehaviour(_this);
+        _this.shootBehaviour = new PlayertShootBehaviour(_this);
         return _this;
     }
-    Car.prototype.update = function () {
-        console.log("vrooom!");
+    Object.defineProperty(Spaceship.prototype, "shootBehaviour", {
+        get: function () { return this._shootBehaviour; },
+        set: function (behaviour) { this._shootBehaviour = behaviour; },
+        enumerable: true,
+        configurable: true
+    });
+    Spaceship.prototype.update = function () {
+        this.moveBehaviour.move();
+        this.keepFromOutOfBounds();
+        this.draw();
     };
-    return Car;
-}(GameObject));
-var Game = (function () {
-    function Game() {
-        var _this = this;
-        requestAnimationFrame(function () { return _this.gameLoop(); });
-    }
-    Game.getInstance = function () {
-        if (!this.instance) {
-            this.instance = new Game();
-        }
-        return this.instance;
-    };
-    Game.prototype.gameLoop = function () {
-        var _this = this;
-        requestAnimationFrame(function () { return _this.gameLoop(); });
-    };
-    Game.prototype.gameOver = function () {
-        new GameOver();
-    };
-    Game.container = document.getElementById("container");
-    return Game;
-}());
-window.addEventListener("load", function () {
-    var game = Game.getInstance();
-});
+    return Spaceship;
+}(MoveableObject));
 var UI = (function () {
-    function UI(game) {
+    function UI() {
         this.life = 100;
         this.coindiv = document.getElementsByTagName("counter")[0];
         this.coindiv.innerHTML = "100";
@@ -144,6 +186,9 @@ var Util = (function () {
             rect1.y < rect2.y + rect2.height &&
             rect1.height + rect1.y > rect2.y);
     };
+    Util.clamp = function (num, min, max) {
+        return num <= min ? min : num >= max ? max : num;
+    };
     return Util;
 }());
 var GameOver = (function (_super) {
@@ -156,25 +201,76 @@ var GameOver = (function (_super) {
     GameOver.prototype.update = function () { };
     return GameOver;
 }(GameObject));
-var MoveBehaviour = (function () {
-    function MoveBehaviour(context) {
+var PlayertMoveBehaviour = (function (_super) {
+    __extends(PlayertMoveBehaviour, _super);
+    function PlayertMoveBehaviour(context) {
+        var _this = _super.call(this, context) || this;
+        window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); });
+        window.addEventListener("keyup", function (e) { return _this.onKeyUp(e); });
+        return _this;
+    }
+    PlayertMoveBehaviour.prototype.move = function () {
+        this.context.x += this._xSpeed;
+        this.context.y += this._ySpeed;
+    };
+    PlayertMoveBehaviour.prototype.onKeyDown = function (event) {
+        switch (event.keyCode) {
+            case 87:
+                this._ySpeed = -5;
+                break;
+            case 83:
+                this._ySpeed = 5;
+                break;
+            case 65:
+                this._xSpeed = -5;
+                break;
+            case 68:
+                this._xSpeed = 5;
+                break;
+        }
+    };
+    PlayertMoveBehaviour.prototype.onKeyUp = function (event) {
+        switch (event.keyCode) {
+            case 87:
+                this._ySpeed = 0;
+                break;
+            case 83:
+                this._ySpeed = 0;
+                break;
+            case 65:
+                this._xSpeed = 0;
+                break;
+            case 68:
+                this._xSpeed = 0;
+                break;
+        }
+    };
+    return PlayertMoveBehaviour;
+}(MoveBehaviour));
+var ShootBehaviour = (function () {
+    function ShootBehaviour(context) {
         this.context = context;
     }
-    return MoveBehaviour;
+    return ShootBehaviour;
 }());
-var MoveableObject = (function (_super) {
-    __extends(MoveableObject, _super);
-    function MoveableObject(x, y) {
-        return _super.call(this, x, y, 'movable_object') || this;
+var PlayertShootBehaviour = (function (_super) {
+    __extends(PlayertShootBehaviour, _super);
+    function PlayertShootBehaviour(context) {
+        var _this = _super.call(this, context) || this;
+        window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); });
+        return _this;
     }
-    Object.defineProperty(MoveableObject.prototype, "moveBehaviour", {
-        get: function () { return this._moveBehaviour; },
-        set: function (behaviour) { this._moveBehaviour = behaviour; },
-        enumerable: true,
-        configurable: true
-    });
-    MoveableObject.prototype.move = function () {
+    PlayertShootBehaviour.prototype.shoot = function () {
+        console.log("shooting");
     };
-    return MoveableObject;
-}(GameObject));
+    PlayertShootBehaviour.prototype.onKeyDown = function (event) {
+        console.log(event.keyCode);
+        switch (event.keyCode) {
+            case 32:
+                this.shoot();
+                break;
+        }
+    };
+    return PlayertShootBehaviour;
+}(ShootBehaviour));
 //# sourceMappingURL=main.js.map
