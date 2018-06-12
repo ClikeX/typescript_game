@@ -1,6 +1,7 @@
 class Game {
     private static instance: Game;
     public static container = document.getElementById("container");
+    private _player_ship: Spaceship;
 
     public static getInstance() {
         if (!this.instance) {
