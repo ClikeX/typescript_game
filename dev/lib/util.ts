@@ -15,4 +15,7 @@ class Util {
       rect1.y < rect2.y + rect2.height &&
       rect1.height + rect1.y > rect2.y)
   }
+  public static clamp(num: number, min: number, max: number) {
+    return num <= min ? min : num >= max ? max : num;
+  }
 }

@@ -5,6 +5,7 @@ abstract class GameObject {
   private _width: number = 0;
   private _height: number = 0;
   private _div: HTMLElement;
+  private _parent: HTMLElement;
 
   //Properties
   public get x(): number { return this._x; }
@@ -29,15 +30,14 @@ abstract class GameObject {
    * @param tag Html semantic tag name
    * @param parent parent object to append to
    */
-
   constructor(x: number, y: number, tag: string) {
     this._x = x;
     this._y = y;
 
-    let parent: HTMLElement = <HTMLElement>document.getElementsByTagName("game")[0];
+    this._parent = <HTMLElement>document.getElementsByTagName("container")[0];
 
     this._div = document.createElement(tag);
-    parent.appendChild(this._div);
+    this._parent.appendChild(this._div);
 
     this._width = this._div.clientWidth;
     this._height = this._div.clientHeight;
@@ -62,9 +62,14 @@ abstract class GameObject {
   public abstract update(): void
 
   public outOfBounds(): boolean {
-    let h = window.innerHeight;
-    let w = window.innerWidth
+    let h = parent.innerHeight;
+    let w = parent.innerWidth
     return (this.x <= 0 || this.x >= w) || (this.y <= 0 || this.y >= h)
+  }
+
+  protected keepFromOutOfBounds(): void {
+    this.x = Util.clamp(this.x, 0, (this._parent.offsetWidth - this._div.offsetWidth));
+    this.y = Util.clamp(this.y, 0, (this._parent.offsetHeight - this._div.offsetHeight));
   }
 
   public hasCollision(obj: GameObject): boolean {
