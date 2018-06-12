@@ -6,8 +6,8 @@ abstract class MoveableObject extends GameObject {
   get moveBehaviour(): MoveBehaviour { return this._moveBehaviour }
   set moveBehaviour(behaviour: MoveBehaviour) { this._moveBehaviour = behaviour }
 
-  constructor(x: number, y: number) {
-    super(x, y, 'movable_object');
+  constructor(x: number, y: number, tag: string) {
+    super(x, y, tag);
   }
 
   public move(): void {
