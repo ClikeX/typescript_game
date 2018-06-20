@@ -5,7 +5,7 @@ abstract class GameObject {
   private _width: number = 0;
   private _height: number = 0;
   private _div: HTMLElement;
-  private _parent: HTMLElement;
+  protected _parent: HTMLElement;
 
   //Properties
   public get x(): number { return this._x; }

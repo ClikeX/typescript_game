@@ -14,9 +14,11 @@ class PlayertMoveBehaviour extends MoveBehaviour {
   onKeyDown(event: KeyboardEvent): void {
     switch (event.keyCode) {
       case 87:
+        this.context.div.style.backgroundImage = "url('../images/starship/starship1Up.png')";
         this._ySpeed = -5;
         break
       case 83:
+        this.context.div.style.backgroundImage = "url('../images/starship/starship1Down.png')";
         this._ySpeed = 5;
         break
       case 65:
@@ -31,9 +33,11 @@ class PlayertMoveBehaviour extends MoveBehaviour {
   onKeyUp(event: KeyboardEvent): void {
     switch (event.keyCode) {
       case 87:
+        this.context.div.style.backgroundImage = "";
         this._ySpeed = 0;
         break
       case 83:
+        this.context.div.style.backgroundImage = "";
         this._ySpeed = 0;
         break
       case 65:

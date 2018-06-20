@@ -2,6 +2,7 @@ class Game {
     private static instance: Game;
     public static container = document.getElementById("container");
     private _player_ship: Spaceship;
+    public projectiles: Array<GameObject>
 
     public static getInstance() {
         if (!this.instance) {
@@ -13,6 +14,7 @@ class Game {
     private constructor() {
         requestAnimationFrame(() => this.gameLoop());
         this._player_ship = new Spaceship();
+        this.projectiles = new Array();
     }
 
     private gameLoop() {
@@ -22,6 +24,10 @@ class Game {
         if (this._player_ship.x == -150) {
             this.gameOver();
         }
+        this.projectiles.forEach(projectile => {
+            projectile.update();
+        });
+
     }
 
     private gameOver(): void {

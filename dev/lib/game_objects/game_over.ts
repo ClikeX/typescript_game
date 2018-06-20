@@ -1,3 +1,4 @@
+/// <reference path="./abstract/game_object.ts"/>
 class GameOver extends GameObject {
   public update(): void { }
   constructor() {

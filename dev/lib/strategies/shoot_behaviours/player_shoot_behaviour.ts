@@ -9,6 +9,7 @@ class PlayertShootBehaviour extends ShootBehaviour {
   public shoot(): void {
     // Spawn bullet objects from origin
     console.log("shooting");
+    Game.getInstance().projectiles.push(new Bullet(this.context))
   }
 
   onKeyDown(event: KeyboardEvent): void {

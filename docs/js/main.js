@@ -14,6 +14,7 @@ var Game = (function () {
         var _this = this;
         requestAnimationFrame(function () { return _this.gameLoop(); });
         this._player_ship = new Spaceship();
+        this.projectiles = new Array();
     }
     Game.getInstance = function () {
         if (!this.instance) {
@@ -28,6 +29,9 @@ var Game = (function () {
         if (this._player_ship.x == -150) {
             this.gameOver();
         }
+        this.projectiles.forEach(function (projectile) {
+            projectile.update();
+        });
     };
     Game.prototype.gameOver = function () {
         new GameOver();
@@ -38,6 +42,46 @@ var Game = (function () {
 window.addEventListener("load", function () {
     Game.getInstance();
 });
+var UI = (function () {
+    function UI() {
+        this.life = 100;
+        this.coindiv = document.getElementsByTagName("counter")[0];
+        this.coindiv.innerHTML = "100";
+        this.lifediv = document.querySelector("lifebar progressbar");
+        this.lifediv.style.width = this.life + "%";
+        this.lifediv.classList.add("blinking");
+    }
+    UI.prototype.decreaseLife = function (amount) {
+        this.life -= amount;
+        this.lifediv.style.width = this.life + "%";
+    };
+    return UI;
+}());
+var Util = (function () {
+    function Util() {
+    }
+    Util.checkCollisions = function (object, arr) {
+        for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
+            var object2 = arr_1[_i];
+            if (Util.checkCollision(object, object2)) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    };
+    Util.checkCollision = function (rect1, rect2) {
+        return (rect1.x < rect2.x + rect2.width &&
+            rect1.x + rect1.width > rect2.x &&
+            rect1.y < rect2.y + rect2.height &&
+            rect1.height + rect1.y > rect2.y);
+    };
+    Util.clamp = function (num, min, max) {
+        return num <= min ? min : num >= max ? max : num;
+    };
+    return Util;
+}());
 var GameObject = (function () {
     function GameObject(x, y, tag) {
         this._x = 0;
@@ -112,6 +156,18 @@ var MoveBehaviour = (function () {
         this._xSpeed = 0;
         this.context = context;
     }
+    Object.defineProperty(MoveBehaviour.prototype, "xSpeed", {
+        get: function () { return this._xSpeed; },
+        set: function (speed) { this._xSpeed = speed; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(MoveBehaviour.prototype, "ySpeed", {
+        get: function () { return this._ySpeed; },
+        set: function (speed) { this._ySpeed = speed; },
+        enumerable: true,
+        configurable: true
+    });
     return MoveBehaviour;
 }());
 var MoveableObject = (function (_super) {
@@ -129,10 +185,37 @@ var MoveableObject = (function (_super) {
     };
     return MoveableObject;
 }(GameObject));
+var Bullet = (function (_super) {
+    __extends(Bullet, _super);
+    function Bullet(context) {
+        var _this = _super.call(this, (context.x + (context.width / 2)), (context.y - (context.height / 2)), 'Bullet') || this;
+        _this.moveBehaviour = new StraightMoveBehaviour(_this);
+        _this.moveBehaviour.xSpeed = 5;
+        return _this;
+    }
+    Bullet.prototype.update = function () {
+        this.moveBehaviour.move();
+        if (this.outOfBounds()) {
+            this.remove();
+        }
+        this.draw();
+    };
+    return Bullet;
+}(MoveableObject));
+var GameOver = (function (_super) {
+    __extends(GameOver, _super);
+    function GameOver() {
+        var _this = _super.call(this, window.innerWidth / 2 - 50, window.innerHeight / 2 - 25, "gameover") || this;
+        _this.div.innerHTML = "GAME OVER";
+        return _this;
+    }
+    GameOver.prototype.update = function () { };
+    return GameOver;
+}(GameObject));
 var Spaceship = (function (_super) {
     __extends(Spaceship, _super);
     function Spaceship() {
-        var _this = _super.call(this, 50, 50, 'Spaceship') || this;
+        var _this = _super.call(this, 100, 130, 'Spaceship') || this;
         console.log("Spaceship created");
         _this.moveBehaviour = new PlayertMoveBehaviour(_this);
         _this.shootBehaviour = new PlayertShootBehaviour(_this);
@@ -151,56 +234,6 @@ var Spaceship = (function (_super) {
     };
     return Spaceship;
 }(MoveableObject));
-var UI = (function () {
-    function UI() {
-        this.life = 100;
-        this.coindiv = document.getElementsByTagName("counter")[0];
-        this.coindiv.innerHTML = "100";
-        this.lifediv = document.querySelector("lifebar progressbar");
-        this.lifediv.style.width = this.life + "%";
-        this.lifediv.classList.add("blinking");
-    }
-    UI.prototype.decreaseLife = function (amount) {
-        this.life -= amount;
-        this.lifediv.style.width = this.life + "%";
-    };
-    return UI;
-}());
-var Util = (function () {
-    function Util() {
-    }
-    Util.checkCollisions = function (object, arr) {
-        for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
-            var object2 = arr_1[_i];
-            if (Util.checkCollision(object, object2)) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-    };
-    Util.checkCollision = function (rect1, rect2) {
-        return (rect1.x < rect2.x + rect2.width &&
-            rect1.x + rect1.width > rect2.x &&
-            rect1.y < rect2.y + rect2.height &&
-            rect1.height + rect1.y > rect2.y);
-    };
-    Util.clamp = function (num, min, max) {
-        return num <= min ? min : num >= max ? max : num;
-    };
-    return Util;
-}());
-var GameOver = (function (_super) {
-    __extends(GameOver, _super);
-    function GameOver() {
-        var _this = _super.call(this, window.innerWidth / 2 - 50, window.innerHeight / 2 - 25, "gameover") || this;
-        _this.div.innerHTML = "GAME OVER";
-        return _this;
-    }
-    GameOver.prototype.update = function () { };
-    return GameOver;
-}(GameObject));
 var PlayertMoveBehaviour = (function (_super) {
     __extends(PlayertMoveBehaviour, _super);
     function PlayertMoveBehaviour(context) {
@@ -216,9 +249,11 @@ var PlayertMoveBehaviour = (function (_super) {
     PlayertMoveBehaviour.prototype.onKeyDown = function (event) {
         switch (event.keyCode) {
             case 87:
+                this.context.div.style.backgroundImage = "url('../images/starship/starship1Up.png')";
                 this._ySpeed = -5;
                 break;
             case 83:
+                this.context.div.style.backgroundImage = "url('../images/starship/starship1Down.png')";
                 this._ySpeed = 5;
                 break;
             case 65:
@@ -232,9 +267,11 @@ var PlayertMoveBehaviour = (function (_super) {
     PlayertMoveBehaviour.prototype.onKeyUp = function (event) {
         switch (event.keyCode) {
             case 87:
+                this.context.div.style.backgroundImage = "";
                 this._ySpeed = 0;
                 break;
             case 83:
+                this.context.div.style.backgroundImage = "";
                 this._ySpeed = 0;
                 break;
             case 65:
@@ -246,6 +283,16 @@ var PlayertMoveBehaviour = (function (_super) {
         }
     };
     return PlayertMoveBehaviour;
+}(MoveBehaviour));
+var StraightMoveBehaviour = (function (_super) {
+    __extends(StraightMoveBehaviour, _super);
+    function StraightMoveBehaviour(context) {
+        return _super.call(this, context) || this;
+    }
+    StraightMoveBehaviour.prototype.move = function () {
+        this.context.x += this._xSpeed;
+    };
+    return StraightMoveBehaviour;
 }(MoveBehaviour));
 var ShootBehaviour = (function () {
     function ShootBehaviour(context) {
@@ -262,6 +309,7 @@ var PlayertShootBehaviour = (function (_super) {
     }
     PlayertShootBehaviour.prototype.shoot = function () {
         console.log("shooting");
+        Game.getInstance().projectiles.push(new Bullet(this.context));
     };
     PlayertShootBehaviour.prototype.onKeyDown = function (event) {
         console.log(event.keyCode);

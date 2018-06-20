@@ -1,4 +1,4 @@
-/// <reference path="../strategies/move_behaviours/move_behaviour.ts"/>
+/// <reference path="../../strategies/move_behaviours/move_behaviour.ts"/>
 
 abstract class MoveableObject extends GameObject {
   private _moveBehaviour!: MoveBehaviour;
