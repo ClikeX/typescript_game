@@ -17,18 +17,40 @@ body, html {
     height: 300px;
     background-image: url(../images/menu/background.png);
 }
-
-Spaceship {
+spaceship {
+    position: absolute;
     width: 32px;
     height: 13px;
     background-image: url(../images/starship/starship1Normal.png);
     border-image-repeat: stretch;
 }
 
-Bullet {
+bullet {
     position: absolute;
     width: 10px;
     height: 10px;
     background-color: yellow;
     border-radius: 100%;
+}
+
+enemy {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    background: url(../images/starship/starship2.png) left center;
+    /* -webkit-animation: sprite 1s steps(8) infinite; */
+    animation: sprite 1s steps(8) infinite;
+}
+
+@keyframes sprite {
+      from{background-position-x:0px;}
+      to{background-position-x: 255px;}
+}
+
+gameover {
+    color: white;
+}
+
+scoreboard {
+    color: white;
 }

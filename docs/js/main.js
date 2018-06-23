@@ -12,31 +12,65 @@ var __extends = (this && this.__extends) || (function () {
 var Game = (function () {
     function Game() {
         var _this = this;
-        requestAnimationFrame(function () { return _this.gameLoop(); });
+        this.container = document.getElementsByTagName("container")[0];
+        this._game_active = true;
+        this._score = 0;
+        this._scoreboard = new Scoreboard();
         this._player_ship = new Spaceship();
         this.projectiles = new Array();
+        this.enemies = new Array();
+        requestAnimationFrame(function () { return _this.gameLoop(); });
     }
-    Game.getInstance = function () {
-        if (!this.instance) {
-            this.instance = new Game();
+    Object.defineProperty(Game.prototype, "score", {
+        get: function () { return this._score; },
+        set: function (score) {
+            this._score += score;
+            console.log("Score: " + this._score);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Game.instance = function () {
+        if (!this._instance) {
+            this._instance = new Game();
         }
-        return this.instance;
+        return this._instance;
+    };
+    Game.getInstance = function () {
+        return this.instance();
     };
     Game.prototype.gameLoop = function () {
         var _this = this;
         this._player_ship.update();
-        requestAnimationFrame(function () { return _this.gameLoop(); });
-        if (this._player_ship.x == -150) {
-            this.gameOver();
-        }
+        this._scoreboard.update();
         this.projectiles.forEach(function (projectile) {
             projectile.update();
         });
+        this.enemies.forEach(function (enemy) {
+            if (enemy.hasCollision(_this._player_ship)) {
+                _this.gameOver();
+            }
+            enemy.hasCollisions(_this.projectiles, function (enemy, projectile) {
+                Game.instance().score = enemy.score;
+                enemy.remove();
+                projectile.remove();
+            });
+            enemy.update();
+        });
+        if (this.enemies.length <= 0) {
+            EnemyFactory.create(5, 800, 20, 180);
+        }
+        if (this._game_active) {
+            requestAnimationFrame(function () { return _this.gameLoop(); });
+        }
     };
     Game.prototype.gameOver = function () {
+        this._game_active = false;
         new GameOver();
     };
-    Game.container = document.getElementById("container");
+    Game.onNotify = function (func) {
+        func(this.getInstance());
+    };
     return Game;
 }());
 window.addEventListener("load", function () {
@@ -61,15 +95,17 @@ var Util = (function () {
     function Util() {
     }
     Util.checkCollisions = function (object, arr) {
+        var val = false;
         for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
             var object2 = arr_1[_i];
             if (Util.checkCollision(object, object2)) {
-                return true;
+                val = true;
             }
             else {
-                return false;
+                val = false;
             }
         }
+        return val;
     };
     Util.checkCollision = function (rect1, rect2) {
         return (rect1.x < rect2.x + rect2.width &&
@@ -80,10 +116,31 @@ var Util = (function () {
     Util.clamp = function (num, min, max) {
         return num <= min ? min : num >= max ? max : num;
     };
+    Util.removeFromArray = function (array, object) {
+        array.splice(array.indexOf(object), 1);
+    };
     return Util;
 }());
-var GameObject = (function () {
-    function GameObject(x, y, tag) {
+var BaseFactory = (function () {
+    function BaseFactory() {
+    }
+    return BaseFactory;
+}());
+var EnemyFactory = (function (_super) {
+    __extends(EnemyFactory, _super);
+    function EnemyFactory() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    EnemyFactory.create = function (amount, x, minY, maxY) {
+        for (var index = 0; index <= amount; index++) {
+            var y_pos = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+            Game.getInstance().enemies.push(new BasicEnemy(x, y_pos));
+        }
+    };
+    return EnemyFactory;
+}(BaseFactory));
+var Drawable = (function () {
+    function Drawable(x, y, tag) {
         this._x = 0;
         this._y = 0;
         this._width = 0;
@@ -97,42 +154,49 @@ var GameObject = (function () {
         this._height = this._div.clientHeight;
         this.draw();
     }
-    Object.defineProperty(GameObject.prototype, "x", {
+    Object.defineProperty(Drawable.prototype, "x", {
         get: function () { return this._x; },
         set: function (value) { this._x = value; },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(GameObject.prototype, "y", {
+    Object.defineProperty(Drawable.prototype, "y", {
         get: function () { return this._y; },
         set: function (value) { this._y = value; },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(GameObject.prototype, "width", {
+    Object.defineProperty(Drawable.prototype, "width", {
         get: function () { return this._width; },
         set: function (v) { this._width = v; },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(GameObject.prototype, "height", {
+    Object.defineProperty(Drawable.prototype, "height", {
         get: function () { return this._height; },
         set: function (v) { this._height = v; },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(GameObject.prototype, "div", {
+    Object.defineProperty(Drawable.prototype, "div", {
         get: function () { return this._div; },
         set: function (v) { this._div = v; },
         enumerable: true,
         configurable: true
     });
-    GameObject.prototype.draw = function () {
+    Drawable.prototype.draw = function () {
         this._div.style.transform = "translate(" + this._x + "px, " + this._y + "px)";
     };
-    GameObject.prototype.remove = function () {
+    Drawable.prototype.remove = function () {
         this.div.remove();
     };
+    return Drawable;
+}());
+var GameObject = (function (_super) {
+    __extends(GameObject, _super);
+    function GameObject(x, y, tag) {
+        return _super.call(this, x, y, tag) || this;
+    }
     GameObject.prototype.outOfBounds = function () {
         var h = parent.innerHeight;
         var w = parent.innerWidth;
@@ -143,13 +207,29 @@ var GameObject = (function () {
         this.y = Util.clamp(this.y, 0, (this._parent.offsetHeight - this._div.offsetHeight));
     };
     GameObject.prototype.hasCollision = function (obj) {
-        return (this.x < obj.x + obj.width &&
+        if (this.x < obj.x + obj.width &&
             this.x + this.width > obj.x &&
             this.y < obj.y + obj.height &&
-            this.y + this.height > obj.y);
+            this.y + this.height > obj.y) {
+            this.collide();
+            obj.collide();
+            return true;
+        }
+        else {
+            return false;
+        }
+    };
+    GameObject.prototype.hasCollisions = function (array, func) {
+        for (var index = 0; index < array.length; index++) {
+            var element = array[index];
+            if (this.hasCollision(element)) {
+                func(this, element);
+                break;
+            }
+        }
     };
     return GameObject;
-}());
+}(Drawable));
 var MoveBehaviour = (function () {
     function MoveBehaviour(context) {
         this._ySpeed = 0;
@@ -194,11 +274,17 @@ var Bullet = (function (_super) {
         return _this;
     }
     Bullet.prototype.update = function () {
-        this.moveBehaviour.move();
         if (this.outOfBounds()) {
             this.remove();
         }
+        this.moveBehaviour.move();
         this.draw();
+    };
+    Bullet.prototype.remove = function () {
+        _super.prototype.remove.call(this);
+        Util.removeFromArray(Game.getInstance().projectiles, this);
+    };
+    Bullet.prototype.collide = function () {
     };
     return Bullet;
 }(MoveableObject));
@@ -210,8 +296,20 @@ var GameOver = (function (_super) {
         return _this;
     }
     GameOver.prototype.update = function () { };
+    GameOver.prototype.collide = function () {
+    };
     return GameOver;
-}(GameObject));
+}(Drawable));
+var Scoreboard = (function (_super) {
+    __extends(Scoreboard, _super);
+    function Scoreboard() {
+        return _super.call(this, 10, window.innerHeight / 10, "scoreboard") || this;
+    }
+    Scoreboard.prototype.update = function () {
+        this.div.innerHTML = "Score: " + Game.instance().score.toString();
+    };
+    return Scoreboard;
+}(Drawable));
 var Spaceship = (function (_super) {
     __extends(Spaceship, _super);
     function Spaceship() {
@@ -227,13 +325,72 @@ var Spaceship = (function (_super) {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(Spaceship.prototype, "observers", {
+        get: function () { return this._observers; },
+        enumerable: true,
+        configurable: true
+    });
     Spaceship.prototype.update = function () {
         this.moveBehaviour.move();
         this.keepFromOutOfBounds();
         this.draw();
     };
+    Spaceship.prototype.notify = function () {
+    };
+    Spaceship.prototype.subscribe = function (o) {
+        this.observers.push(o);
+    };
+    Spaceship.prototype.unsubscribe = function (o) {
+        var i = this.observers.indexOf(o);
+        if (i != -1) {
+            this.observers.splice(i, 1);
+        }
+    };
+    Spaceship.prototype.collide = function () {
+    };
     return Spaceship;
 }(MoveableObject));
+var AbstractEnemy = (function (_super) {
+    __extends(AbstractEnemy, _super);
+    function AbstractEnemy() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Object.defineProperty(AbstractEnemy.prototype, "score", {
+        get: function () { return this._score; },
+        enumerable: true,
+        configurable: true
+    });
+    return AbstractEnemy;
+}(MoveableObject));
+var BasicEnemy = (function (_super) {
+    __extends(BasicEnemy, _super);
+    function BasicEnemy(x, y) {
+        var _this = _super.call(this, x, y, 'enemy') || this;
+        _this._score = 5;
+        _this.moveBehaviour = new StraightMoveBehaviour(_this);
+        _this.moveBehaviour.xSpeed = -3;
+        return _this;
+    }
+    Object.defineProperty(BasicEnemy.prototype, "shootBehaviour", {
+        get: function () { return this._shootBehaviour; },
+        enumerable: true,
+        configurable: true
+    });
+    BasicEnemy.prototype.update = function () {
+        if (this.outOfBounds()) {
+            this.remove();
+        }
+        this.moveBehaviour.move();
+        this.draw();
+    };
+    BasicEnemy.prototype.remove = function () {
+        _super.prototype.remove.call(this);
+        Util.removeFromArray(Game.getInstance().enemies, this);
+    };
+    BasicEnemy.prototype.collide = function () {
+    };
+    return BasicEnemy;
+}(AbstractEnemy));
 var PlayertMoveBehaviour = (function (_super) {
     __extends(PlayertMoveBehaviour, _super);
     function PlayertMoveBehaviour(context) {
@@ -304,15 +461,13 @@ var PlayertShootBehaviour = (function (_super) {
     __extends(PlayertShootBehaviour, _super);
     function PlayertShootBehaviour(context) {
         var _this = _super.call(this, context) || this;
-        window.addEventListener("keydown", function (e) { return _this.onKeyDown(e); });
+        window.addEventListener("keyup", function (e) { return _this.onKeyDown(e); });
         return _this;
     }
     PlayertShootBehaviour.prototype.shoot = function () {
-        console.log("shooting");
         Game.getInstance().projectiles.push(new Bullet(this.context));
     };
     PlayertShootBehaviour.prototype.onKeyDown = function (event) {
-        console.log(event.keyCode);
         switch (event.keyCode) {
             case 32:
                 this.shoot();

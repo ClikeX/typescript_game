@@ -8,13 +8,22 @@ class Bullet extends MoveableObject {
     this.moveBehaviour.xSpeed = 5;
   }
   update() {
+    if (this.outOfBounds()) {
+      this.remove()
+    }
     // Calculate movements
     this.moveBehaviour.move();
-    // Keep object from going out of bounds
-    if (this.outOfBounds()) {
-      this.remove();
-    }
     // Draw the HTML
     this.draw();
+
+  }
+
+  public remove() {
+    super.remove();
+    Util.removeFromArray(Game.getInstance().projectiles, this)
+  }
+
+  protected collide(): void {
+
   }
 }
