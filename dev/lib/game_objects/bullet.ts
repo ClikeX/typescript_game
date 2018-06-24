@@ -12,7 +12,7 @@ class Bullet extends MoveableObject {
       this.remove()
     }
     // Calculate movements
-    this.moveBehaviour.move();
+    this.move();
     // Draw the HTML
     this.draw();
 
@@ -20,7 +20,7 @@ class Bullet extends MoveableObject {
 
   public remove() {
     super.remove();
-    Util.removeFromArray(Game.getInstance().projectiles, this)
+    Util.removeFromArray(Game.instance().projectiles, this)
   }
 
   protected collide(): void {

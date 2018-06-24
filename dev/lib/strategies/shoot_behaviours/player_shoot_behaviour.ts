@@ -7,7 +7,7 @@ class PlayertShootBehaviour extends ShootBehaviour {
   }
 
   public shoot(): void {
-    Game.getInstance().projectiles.push(new Bullet(this.context))
+    Game.instance().projectiles.push(new Bullet(this.context))
   }
 
   onKeyDown(event: KeyboardEvent): void {

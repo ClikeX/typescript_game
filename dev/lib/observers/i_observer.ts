@@ -1,3 +1,0 @@
-interface iObserver {
-  notify(): void;
-}

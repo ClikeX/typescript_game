@@ -13,8 +13,6 @@ abstract class GameObject extends Drawable {
     super(x, y, tag)
   }
 
-  protected abstract collide(): void
-
   public outOfBounds(): boolean {
     let h = parent.innerHeight;
     let w = parent.innerWidth
@@ -31,8 +29,6 @@ abstract class GameObject extends Drawable {
       this.x + this.width > obj.x &&
       this.y < obj.y + obj.height &&
       this.y + this.height > obj.y) {
-      this.collide();
-      obj.collide();
       return true;
     } else {
       return false;

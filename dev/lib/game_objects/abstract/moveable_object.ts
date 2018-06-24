@@ -10,7 +10,7 @@ abstract class MoveableObject extends GameObject {
     super(x, y, tag);
   }
 
-  public move(): void {
-
+  public move() {
+    this._moveBehaviour.move();
   }
 }

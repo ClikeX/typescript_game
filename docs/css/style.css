@@ -7,6 +7,7 @@ body, html {
 * {
     box-sizing: border-box;
     display: block;
+    color: white;
 }
 
 #container {
@@ -17,7 +18,8 @@ body, html {
     height: 300px;
     background-image: url(../images/menu/background.png);
 }
-spaceship {
+
+player {
     position: absolute;
     width: 32px;
     height: 13px;
@@ -45,12 +47,4 @@ enemy {
 @keyframes sprite {
       from{background-position-x:0px;}
       to{background-position-x: 255px;}
-}
-
-gameover {
-    color: white;
-}
-
-scoreboard {
-    color: white;
 }

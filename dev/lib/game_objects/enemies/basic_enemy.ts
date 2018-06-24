@@ -11,24 +11,24 @@ class BasicEnemy extends AbstractEnemy {
   constructor(x: number, y: number, ) {
     super(x, y, 'enemy');
     this.moveBehaviour = new StraightMoveBehaviour(this);
-    this.moveBehaviour.xSpeed = -3;
+    this.moveBehaviour.xSpeed = (-3 - Game.instance().wave);
   }
   update() {
     if (this.outOfBounds()) {
       this.remove()
     }
     // Calculate movements
-    this.moveBehaviour.move();
+    this.move();
     // Draw the HTML
     this.draw();
   }
 
   public remove() {
     super.remove();
-    Util.removeFromArray(Game.getInstance().enemies, this)
+    Util.removeFromArray(Game.instance().enemies, this)
   }
 
-  protected collide(): void {
-
+  public notify(): void {
+    this.moveBehaviour.xSpeed += -1;
   }
 }

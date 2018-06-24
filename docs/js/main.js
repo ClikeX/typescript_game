@@ -14,9 +14,11 @@ var Game = (function () {
         var _this = this;
         this.container = document.getElementsByTagName("container")[0];
         this._game_active = true;
+        this._wave = 0;
         this._score = 0;
         this._scoreboard = new Scoreboard();
-        this._player_ship = new Spaceship();
+        this._wavecounter = new WaveCounter();
+        this._player_ship = new Player();
         this.projectiles = new Array();
         this.enemies = new Array();
         requestAnimationFrame(function () { return _this.gameLoop(); });
@@ -30,19 +32,22 @@ var Game = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(Game.prototype, "wave", {
+        get: function () { return this._wave; },
+        enumerable: true,
+        configurable: true
+    });
     Game.instance = function () {
         if (!this._instance) {
             this._instance = new Game();
         }
         return this._instance;
     };
-    Game.getInstance = function () {
-        return this.instance();
-    };
     Game.prototype.gameLoop = function () {
         var _this = this;
         this._player_ship.update();
         this._scoreboard.update();
+        this._wavecounter.update();
         this.projectiles.forEach(function (projectile) {
             projectile.update();
         });
@@ -52,13 +57,14 @@ var Game = (function () {
             }
             enemy.hasCollisions(_this.projectiles, function (enemy, projectile) {
                 Game.instance().score = enemy.score;
-                enemy.remove();
+                enemy.hit();
                 projectile.remove();
             });
             enemy.update();
         });
         if (this.enemies.length <= 0) {
-            EnemyFactory.create(5, 800, 20, 180);
+            this._wave += 1;
+            EnemyFactory.create((5 + this._wave), window.innerWidth - 50, 20, 180);
         }
         if (this._game_active) {
             requestAnimationFrame(function () { return _this.gameLoop(); });
@@ -68,13 +74,10 @@ var Game = (function () {
         this._game_active = false;
         new GameOver();
     };
-    Game.onNotify = function (func) {
-        func(this.getInstance());
-    };
     return Game;
 }());
 window.addEventListener("load", function () {
-    Game.getInstance();
+    Game.instance();
 });
 var UI = (function () {
     function UI() {
@@ -121,24 +124,17 @@ var Util = (function () {
     };
     return Util;
 }());
-var BaseFactory = (function () {
-    function BaseFactory() {
-    }
-    return BaseFactory;
-}());
-var EnemyFactory = (function (_super) {
-    __extends(EnemyFactory, _super);
+var EnemyFactory = (function () {
     function EnemyFactory() {
-        return _super !== null && _super.apply(this, arguments) || this;
     }
     EnemyFactory.create = function (amount, x, minY, maxY) {
         for (var index = 0; index <= amount; index++) {
             var y_pos = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
-            Game.getInstance().enemies.push(new BasicEnemy(x, y_pos));
+            Game.instance().enemies.push(new BasicEnemy(x, y_pos));
         }
     };
     return EnemyFactory;
-}(BaseFactory));
+}());
 var Drawable = (function () {
     function Drawable(x, y, tag) {
         this._x = 0;
@@ -211,8 +207,6 @@ var GameObject = (function (_super) {
             this.x + this.width > obj.x &&
             this.y < obj.y + obj.height &&
             this.y + this.height > obj.y) {
-            this.collide();
-            obj.collide();
             return true;
         }
         else {
@@ -262,6 +256,7 @@ var MoveableObject = (function (_super) {
         configurable: true
     });
     MoveableObject.prototype.move = function () {
+        this._moveBehaviour.move();
     };
     return MoveableObject;
 }(GameObject));
@@ -277,12 +272,12 @@ var Bullet = (function (_super) {
         if (this.outOfBounds()) {
             this.remove();
         }
-        this.moveBehaviour.move();
+        this.move();
         this.draw();
     };
     Bullet.prototype.remove = function () {
         _super.prototype.remove.call(this);
-        Util.removeFromArray(Game.getInstance().projectiles, this);
+        Util.removeFromArray(Game.instance().projectiles, this);
     };
     Bullet.prototype.collide = function () {
     };
@@ -300,6 +295,28 @@ var GameOver = (function (_super) {
     };
     return GameOver;
 }(Drawable));
+var Player = (function (_super) {
+    __extends(Player, _super);
+    function Player() {
+        var _this = _super.call(this, 100, 130, 'player') || this;
+        console.log("Player created");
+        _this.moveBehaviour = new PlayertMoveBehaviour(_this);
+        _this.shootBehaviour = new PlayertShootBehaviour(_this);
+        return _this;
+    }
+    Object.defineProperty(Player.prototype, "shootBehaviour", {
+        get: function () { return this._shootBehaviour; },
+        set: function (behaviour) { this._shootBehaviour = behaviour; },
+        enumerable: true,
+        configurable: true
+    });
+    Player.prototype.update = function () {
+        this.move();
+        this.keepFromOutOfBounds();
+        this.draw();
+    };
+    return Player;
+}(MoveableObject));
 var Scoreboard = (function (_super) {
     __extends(Scoreboard, _super);
     function Scoreboard() {
@@ -310,46 +327,16 @@ var Scoreboard = (function (_super) {
     };
     return Scoreboard;
 }(Drawable));
-var Spaceship = (function (_super) {
-    __extends(Spaceship, _super);
-    function Spaceship() {
-        var _this = _super.call(this, 100, 130, 'Spaceship') || this;
-        console.log("Spaceship created");
-        _this.moveBehaviour = new PlayertMoveBehaviour(_this);
-        _this.shootBehaviour = new PlayertShootBehaviour(_this);
-        return _this;
+var WaveCounter = (function (_super) {
+    __extends(WaveCounter, _super);
+    function WaveCounter() {
+        return _super.call(this, 10, window.innerHeight / 20, "wavecounter") || this;
     }
-    Object.defineProperty(Spaceship.prototype, "shootBehaviour", {
-        get: function () { return this._shootBehaviour; },
-        set: function (behaviour) { this._shootBehaviour = behaviour; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Spaceship.prototype, "observers", {
-        get: function () { return this._observers; },
-        enumerable: true,
-        configurable: true
-    });
-    Spaceship.prototype.update = function () {
-        this.moveBehaviour.move();
-        this.keepFromOutOfBounds();
-        this.draw();
+    WaveCounter.prototype.update = function () {
+        this.div.innerHTML = "Wave: " + Game.instance().wave.toString();
     };
-    Spaceship.prototype.notify = function () {
-    };
-    Spaceship.prototype.subscribe = function (o) {
-        this.observers.push(o);
-    };
-    Spaceship.prototype.unsubscribe = function (o) {
-        var i = this.observers.indexOf(o);
-        if (i != -1) {
-            this.observers.splice(i, 1);
-        }
-    };
-    Spaceship.prototype.collide = function () {
-    };
-    return Spaceship;
-}(MoveableObject));
+    return WaveCounter;
+}(Drawable));
 var AbstractEnemy = (function (_super) {
     __extends(AbstractEnemy, _super);
     function AbstractEnemy() {
@@ -360,6 +347,12 @@ var AbstractEnemy = (function (_super) {
         enumerable: true,
         configurable: true
     });
+    AbstractEnemy.prototype.hit = function () {
+        Game.instance().enemies.forEach(function (e) {
+            e.notify();
+        });
+        this.remove();
+    };
     return AbstractEnemy;
 }(MoveableObject));
 var BasicEnemy = (function (_super) {
@@ -368,7 +361,7 @@ var BasicEnemy = (function (_super) {
         var _this = _super.call(this, x, y, 'enemy') || this;
         _this._score = 5;
         _this.moveBehaviour = new StraightMoveBehaviour(_this);
-        _this.moveBehaviour.xSpeed = -3;
+        _this.moveBehaviour.xSpeed = (-3 - Game.instance().wave);
         return _this;
     }
     Object.defineProperty(BasicEnemy.prototype, "shootBehaviour", {
@@ -380,14 +373,15 @@ var BasicEnemy = (function (_super) {
         if (this.outOfBounds()) {
             this.remove();
         }
-        this.moveBehaviour.move();
+        this.move();
         this.draw();
     };
     BasicEnemy.prototype.remove = function () {
         _super.prototype.remove.call(this);
-        Util.removeFromArray(Game.getInstance().enemies, this);
+        Util.removeFromArray(Game.instance().enemies, this);
     };
-    BasicEnemy.prototype.collide = function () {
+    BasicEnemy.prototype.notify = function () {
+        this.moveBehaviour.xSpeed += -1;
     };
     return BasicEnemy;
 }(AbstractEnemy));
@@ -465,7 +459,7 @@ var PlayertShootBehaviour = (function (_super) {
         return _this;
     }
     PlayertShootBehaviour.prototype.shoot = function () {
-        Game.getInstance().projectiles.push(new Bullet(this.context));
+        Game.instance().projectiles.push(new Bullet(this.context));
     };
     PlayertShootBehaviour.prototype.onKeyDown = function (event) {
         switch (event.keyCode) {
