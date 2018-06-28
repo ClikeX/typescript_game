@@ -4,6 +4,18 @@ This is a school assigment. The task is to use OOP practices in Typescript to cr
 
 Play it at http://woutervandermeulen.nl/typescript_game
 
+
+# Development
+
+For local development you should start the typescript compiler and the node app. This could probably be improved with a gulp script.
+
+```
+tsc --watch
+
+node app.js
+```
+
+
 # Assignments
 
 Week 4: [Pull request](https://github.com/mkMolendijk/PRG08-Typescript-Game/pull/1)
