@@ -2,7 +2,7 @@
 
 This is a school assigment. The task is to use OOP practices in Typescript to create a game.
 
-Play it at woutervandermeulen.nl/typescript_game
+Play it at http://woutervandermeulen.nl/typescript_game
 
 # Assignments
 
