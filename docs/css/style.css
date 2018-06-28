@@ -27,6 +27,14 @@ player {
     border-image-repeat: stretch;
 }
 
+player.up {
+    background-image: url(../images/starship/starship1Up.png);
+}
+
+player.down {
+    background-image: url(../images/starship/starship1Down.png);
+}
+
 bullet {
     position: absolute;
     width: 10px;

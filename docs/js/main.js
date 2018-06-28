@@ -400,11 +400,12 @@ var PlayertMoveBehaviour = (function (_super) {
     PlayertMoveBehaviour.prototype.onKeyDown = function (event) {
         switch (event.keyCode) {
             case 87:
-                this.context.div.style.backgroundImage = "url('../images/starship/starship1Up.png')";
                 this._ySpeed = -5;
+                this.context.div.classList.add("up");
                 break;
             case 83:
                 this.context.div.style.backgroundImage = "url('../images/starship/starship1Down.png')";
+                this.context.div.classList.add("down");
                 this._ySpeed = 5;
                 break;
             case 65:
@@ -418,12 +419,12 @@ var PlayertMoveBehaviour = (function (_super) {
     PlayertMoveBehaviour.prototype.onKeyUp = function (event) {
         switch (event.keyCode) {
             case 87:
-                this.context.div.style.backgroundImage = "";
                 this._ySpeed = 0;
+                this.context.div.classList.remove("up");
                 break;
             case 83:
-                this.context.div.style.backgroundImage = "";
                 this._ySpeed = 0;
+                this.context.div.classList.remove("down");
                 break;
             case 65:
                 this._xSpeed = 0;
