@@ -404,7 +404,6 @@ var PlayertMoveBehaviour = (function (_super) {
                 this.context.div.classList.add("up");
                 break;
             case 83:
-                this.context.div.style.backgroundImage = "url('../images/starship/starship1Down.png')";
                 this.context.div.classList.add("down");
                 this._ySpeed = 5;
                 break;
