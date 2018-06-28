@@ -27,11 +27,11 @@ player {
     border-image-repeat: stretch;
 }
 
-player.up {
+player .up {
     background-image: url(../images/starship/starship1Up.png);
 }
 
-player.down {
+player .down {
     background-image: url(../images/starship/starship1Down.png);
 }
 
